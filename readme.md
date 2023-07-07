@@ -6,7 +6,7 @@
 - 按下图`打开控制台-网络-XHR-Param（可在预览中看到）`
 - 刷新页面检查请求中的报文（暂不知道具体在哪个报文，耐心找一下吧）
 
-![pic1](D:\Project\pyProject\pyForBaiduCloud\image\pic1.png)
+![pic1](./image/pic1.png)
 
 ## 2. COOKIE
 
@@ -19,7 +19,7 @@
 
 操作的百度云目录，可以直接复制url中的path部分
 
-![pic2](D:\Project\pyProject\pyForBaiduCloud\image\pic2.png)
+![pic2](./image./pic2.png)
 
 
 # 方法
