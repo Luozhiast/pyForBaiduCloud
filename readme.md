@@ -36,7 +36,7 @@ custom_name = create_custom_new_name()
 
 ## 2.create_new_name()
 
-创建新文件名有四种命名模式，建议不适用的模式涉及的参数置空即可
+创建新文件名有五种命名模式，建议不适用的模式涉及的参数置空即可
 
 old_name = "oldName.png" ,
 
@@ -70,10 +70,19 @@ prefix = "_image"
 new_name = "oldName_image.png"
 ```
 
-### 2.4 正则替换
+### 2.4 替换扩展名
+
+仅适用于后缀名字母数为3的文件
+
+```
+e.g.
+extension_name = "txt"
+new_name = "oldName.txt"
+```
+
+### 2.5 正则替换
 
 pattern 和 replace 用于正则替换
-
 匹配文件中的pattern替换为replace
 
 ```
