@@ -6,9 +6,7 @@
 - 按下图`打开控制台-网络-XHR-Param（可在预览中看到）`
 - 刷新页面检查请求中的报文（暂不知道具体在哪个报文，耐心找一下吧）
 
-![image-20230707202842376](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20230707202842376.png)
-
-
+![pic1](D:\Project\pyProject\pyForBaiduCloud\image\pic1.png)
 
 ## 2. COOKIE
 
@@ -16,12 +14,12 @@
 
 
 
+
 ## 3. dir_path 
 
 操作的百度云目录，可以直接复制url中的path部分
 
-![image-20230707221136225](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20230707221136225.png)
-
+![pic2](D:\Project\pyProject\pyForBaiduCloud\image\pic2.png)
 
 
 # 方法
@@ -99,11 +97,13 @@ renameDirChildren 如果为真文件夹将会迭代，即按相同的规则重�
 将  rename_list 向接口 **https://pan.baidu.com/api/filemanager** 发送重命名请求
 输入：rename_list
 输出：result
-**rename_list* * 格式
+
+`rename_list` 格式
 ```
-[{"path":PATH,"newname":NEWNAME},{"path":PATH,"newname":NEWNAME},]
+[{"path":PATH,"newname":NEWNAME},{"path":PATH,"newname":NEWNAME}]
 ```
-用 rename_list 构造`post`请求的`data`时，rename_list 需要 `json.dumps` 转成字符串
+用`rename_list` 构造`post`请求的`data`时，rename_list 需要 `json.dumps` 转成字符串
+
 
 ## 5.list_name_desc(dir)
 
