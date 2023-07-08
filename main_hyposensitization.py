@@ -3,6 +3,8 @@ import json
 import time
 import re
 import urllib.parse
+import datetime as dt
+import urllib
 
 # config
 
@@ -11,6 +13,9 @@ import urllib.parse
 # dir_path = '/图片/学代会照片'
 # dir_path = '%2F图片%2F学代会照片'
 dir_path = '/图片/学代会照片'
+
+# 不进行操作的文件夹
+excluded_folder_list = []
 
 # BDTOKEN可在请求的params中找到
 BDTOKEN = ''
@@ -40,6 +45,7 @@ global_extension_name = ""
 global_pattern = ""
 global_replace = ""
 
+try_count = 0
 
 ############################################
 
@@ -86,7 +92,7 @@ def baiduyun_rename(rename_list):
         用 rename_list 构造 post 请求的 data 时， rename_list 需要 json.dumps 转成字符串
     '''
     try_max = 5
-    try_count = 0
+    global try_count
     params = {
         'opera': 'rename',
         'async': '2',
@@ -196,40 +202,111 @@ def create_new_name(old_name, custom_name=None, prefix=None, suffix=None, extens
         raise Exception('old_name 缺失')
 
 
+def generate_date_format(date):
+    date = date.replace(' ', '')  # 去除空格
+    # 当日期仅有年月两个值时，日默认置为1
+    if len(date.split('.')) == 2:
+        date += ".01"
+    try:
+        date_temp = dt.datetime.strptime(date, "%Y.%m.%d")
+        date = dt.datetime.strftime(date_temp, "%Y.%m.%d")
+    except Exception as e:
+        print("error: when working with a folder named " + date)
+    return date
+
+
+def generate_custom_prefix(dir):
+    '''
+    构建文件名前缀
+    :param dir: 当前目录名称
+    '''
+    cur_dir = dir.split('/')[-1]
+    print(cur_dir)
+    global global_custom_prefix
+    if '-' in cur_dir:
+        res = cur_dir.split('-')
+        date_format = generate_date_format(res[0])
+        event_name = res[1]
+    elif len(cur_dir) > 5 and cur_dir[4] == '.':
+        # 认为其他命名格式中事件总以汉字开始
+        first_char = re.findall(r'[\u4e00-\u9fa5]', cur_dir)[0]
+        res = cur_dir.split(first_char)
+        date_format = generate_date_format(res[0])
+        event_name = first_char + res[1]
+    else:
+        global_custom_prefix = cur_dir
+        return
+
+    global_custom_prefix = date_format + "_" + event_name + "_"
+
+
+def preserver_source_format(file_name):
+    '''
+        更新文件后缀
+        :param file_name: 文件名
+    '''
+    global global_custom_prefix
+    global global_custom_suffix
+
+    index_dot = file_name.rfind('.')
+    file_format = file_name[index_dot-len(file_name):]
+    global_custom_suffix = file_format
+
+    if file_format in [".png", ".PNG", ".jpg", ".JPG", ".livp", ".heic"]:
+        global_custom_prefix = "IMG_" + global_custom_prefix
+    elif file_format in [".avi", ".mov", ".mp4"]:
+        global_custom_prefix = "AV_" + global_custom_prefix
+    elif file_format in [".wav", ".aac", ".mp3", ".flac"]:
+        global_custom_prefix = "AU_" + global_custom_prefix
+    else:
+        global_custom_prefix = file_format.upper() + global_custom_prefix
+
+
 def rename_file_in_dir(dir, rename_dir_children=True):
     """
         调用函数list_name_desc(dir)查询
         调用函数baiduyun_rename(rename_list)重命名
         renameDirChildren 如果为真文件夹将会迭代，即按相同的规则重命名文件夹中的文件
     """
+    cur_dir = dir.split('/')[-1]
+    if cur_dir in excluded_folder_list:
+        return
     file_info_list = list_name_desc(dir)
+    generate_custom_prefix(dir)
     rename_list = []
     index = 0
     for each in file_info_list:
         # print(each)
         if each['isdir'] == 0:
-            CUSTOM_NAME = create_custom_new_name(index)
+            global global_custom_prefix
+            temp_custom_prefix = global_custom_prefix
+            preserver_source_format(each['server_filename'])
+            custom_name = create_custom_new_name(index)
             index += 1
             rename_dict = {
                 'path': each['path'],
-                'newname': create_new_name(old_name=each['server_filename'], custom_name=CUSTOM_NAME,
+                'newname': create_new_name(old_name=each['server_filename'], custom_name=custom_name,
                                            prefix=global_prefix, suffix=global_suffix,
                                            extension_name=global_extension_name, pattern=global_pattern,
                                            replace=global_replace),
             }
             rename_list.append(rename_dict)
+            global_custom_prefix = temp_custom_prefix
             print(each['server_filename'] + " -> " + rename_dict['newname'])
         if rename_dir_children and each['isdir'] == 1 and each['dir_empty'] == 0:
             time.sleep(2)
             rename_file_in_dir(each['path'], rename_dir_children=True)
+    global try_count
+    try_count = 0
     baiduyun_rename(rename_list)
 
 
 if __name__ == "__main__":
-    dir_path = input("请输入工作目录， 形如  /图片/学代会照片 : ")
+    dir_path = input("请输入工作目录,相对于根目录， 形如  /图片/学代会照片 : ")
     choose_rename_mode()
-    # for file in list_name_desc(dir_path):
-    # print(file)
+    for file in list_name_desc(dir_path):
+        print(file)
     # print("===================================")
     # rename_dir_children 是否迭代更新子文件夹
-    rename_file_in_dir(dir_path, rename_dir_children=(input("请输入是否修改子文件夹 y/n:") == 'y'))
+    rename_file_in_dir(urllib.parse.unquote(dir_path),
+                       rename_dir_children=(input("请输入是否修改子文件夹 y/n:") == 'y'))
